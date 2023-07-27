@@ -19,6 +19,9 @@ const AuthSchema = new Schema({
     role: {
         type: mongoose.Schema.ObjectId,
         ref: "Roles"
+    },
+    googleId:{
+        type: String,
     }
 })
 const AuthSchemas = mongoose.model("AuthSchemas", AuthSchema);

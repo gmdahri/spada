@@ -14,6 +14,11 @@ AuthRouter.delete('/:id', AuthController.deleteUserById);
 
 
 AuthRouter.post('/login', passport.authenticate('local'), AuthController.loginUser);
+AuthRouter.get('/login/google', passport.authenticate('google', { scope: ['profile'] }));
+AuthRouter.get('/login/googlecallback',  passport.authenticate('google', { failureRedirect: '/api/v1/user/login' }),
+function(req, res) {
+  res.json({message:"SuccessFully Logged in..", susccess: true})
+});
 AuthRouter.post('/signup', AuthController.signup);
 AuthRouter.delete('/logout');
 

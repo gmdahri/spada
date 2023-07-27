@@ -14,7 +14,9 @@ const expressSession = require("express-session");
 const MongoStore = require("connect-mongo");
 const passport = require("./utils/auth");
 
-const AuthRouter = require('./Router/AuthRouter')
+const AuthRouter = require('./Router/AuthRouter');
+const PermissionRouter = require("./Router/PermissionRouter");
+const RoleRouter = require("./Router/RoleRouter");
 
 const url = env.mongoURL;
 const connect = mongoose.connect(url);
@@ -54,6 +56,8 @@ app.use((req, res, next) => {
   next();
 });
 app.use("/api/v1/user/", AuthRouter);
+app.use("/api/v1/permission", PermissionRouter)
+app.use("/api/v1/role", RoleRouter)
 
 app.use((req, res, next) => {
   const err = new Error();

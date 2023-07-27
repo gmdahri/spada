@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, mongo } = require("mongoose");
 
 const { Schema } = mongoose;
 
@@ -15,6 +15,10 @@ const AuthSchema = new Schema({
     password: {
         type: String,
         require: true,
+    },
+    role: {
+        type: mongoose.Schema.ObjectId,
+        ref: "Roles"
     }
 })
 const AuthSchemas = mongoose.model("AuthSchemas", AuthSchema);

@@ -71,7 +71,108 @@ const signup = async (req, res) => {
   }
 }
 
+const AssignRole = async (req, res, next) => {
+  try {
+    const { roleId } = req.body;
+    const user = await AuthSchema.findByIdAndUpdate(
+      req.params.id,
+      { $set: { role: roleId } },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(404).json({ data: {}, success: false, message: "user not found" });
+    }
+    res.json({ data: user, success: true, message: "User Updated" });
+  }
+  catch (error) {
+    next(error)
+  }
+}
+
+async function getAllUsers(req, res, next) {
+  try {
+    const users = await AuthSchema.find().populate("role").populate({
+      path: "role",
+      populate: {
+        path: "Permissions",
+        model: "Permissions",
+      },
+    });
+    res.json({success: true, message: "Permission Retrieved", data: users});
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createUser(req, res, next) {
+  try {
+    const {email, Username} = req.body;
+    const user = await AuthSchema.findOne({email, Username });
+    if(user){
+      return res.status(404).json({data:{}, success: false, message: "User Already Exist" });
+    }
+    const newUser = new AuthSchema({ route, can });
+    const saveUser = await newUser.save();
+    res.status(201).json({success: true, message: "User Created", data: saveUser});
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getUserById(req, res, next) {
+  try {
+    const user = await AuthSchema.findById(req.params.id).populate("role").populate({
+      path: "role",
+      populate: {
+        path: "Permissions",
+        model: "Permissions",
+      },
+    });
+    if (!user) {
+      return res.status(404).json({success: false, data: {}, message: "user not found" });
+    }
+    res.json({success: true, message: "user Created", data: user});
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateUserById(req, res, next) {
+  try {
+    const body = req.body
+    const updateUser = await AuthSchema.findByIdAndUpdate(
+      req.params.id,
+      { body },
+      { new: true } 
+    );
+    if (!updateUser) {
+      return res.status(404).json({data:{}, success: false, message: "User not found" });
+    }
+    res.json({success: true, message: "Permission Updated", data: updatedPermission});
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteUserById(req, res, next) {
+  try {
+    const deletedUser = await AuthSchema.findByIdAndRemove(req.params.id);
+    if (!deletedUser) {
+      return res.status(404).json({ success: true, data: {},message: "User not found" });
+    }
+    res.json({success: true, message: "User Deleted", data: {}});
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   signup,
-  loginUser
+  loginUser,
+  AssignRole,
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUserById,
+  deleteUserById
 };

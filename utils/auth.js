@@ -3,6 +3,9 @@ var LocalStrategy = require('passport-local');
 const AuthSchema = require('../Models/Auth')
 var crypto = require('crypto');
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
+var FacebookStrategy = require('passport-facebook')
+require("dotenv").config();
+
 
 passport.serializeUser(function(user, cb) {
   process.nextTick(function() {
@@ -29,19 +32,36 @@ passport.use(new LocalStrategy(function verify(username, password, cb) {
 
 
 passport.use(new GoogleStrategy({
-    clientID: "568848388178-4vmsa511u4j4ri5cbtr0nalp6ltm3pfo.apps.googleusercontent.com",
-    clientSecret: "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",
+    clientID: process.env.GOOGLE_ID,
+    clientSecret: process.env.GOOGLE_SECRET,
     callbackURL: "http://localhost:5000/api/v1/user/login/googlecallback"
   },
   async function(accessToken, refreshToken, profile, cb) {
     const user = await AuthSchema.findOne({ googleId: profile.id })
     if(!user){
-      const newUser =await AuthSchema.create({Username: profile.displayName});
+      const newUser =await AuthSchema.create({Username: profile.displayName, googleId: profile.id});
       newUser.save();
       return cb(null, newUser)
     }
     return cb(null, user);
   }
+));
+
+passport.use(new FacebookStrategy({
+  clientID: process.env.FACEBOOK_ID,
+  clientSecret: process.env.FACEBOOK_SECRET,
+  callbackURL: "http://localhost:5000/api/v1/user/auth/facebook/callback/",
+},
+async function(accessToken, refreshToken, profile, cb) {
+  console.log("profile,", profile)
+  const user = await AuthSchema.findOne({ facebookId: profile.id })
+  if(!user){
+    const newUser =await AuthSchema.create({Username: profile.displayName, facebookId: profile.id});
+    newUser.save();
+    return cb(null, newUser)
+  }
+  return cb(null, user);
+}
 ));
 
 module.exports = passport;

@@ -22,6 +22,9 @@ const AuthSchema = new Schema({
     },
     googleId:{
         type: String,
+    },
+    facebookId:{
+        type: String,
     }
 })
 const AuthSchemas = mongoose.model("AuthSchemas", AuthSchema);

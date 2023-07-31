@@ -15,11 +15,21 @@ AuthRouter.delete('/:id', AuthController.deleteUserById);
 
 AuthRouter.post('/login', passport.authenticate('local'), AuthController.loginUser);
 AuthRouter.get('/login/google', passport.authenticate('google', { scope: ['profile'] }));
-AuthRouter.get('/login/googlecallback',  passport.authenticate('google', { failureRedirect: '/api/v1/user/login' }),
-function(req, res) {
-  res.json({message:"SuccessFully Logged in..", susccess: true})
-});
+AuthRouter.get('/login/googlecallback', passport.authenticate('google', { failureRedirect: '/api/v1/user/login' }),
+  function (req, res) {
+    res.json({ message: "SuccessFully Logged in..", susccess: true })
+  });
 AuthRouter.post('/signup', AuthController.signup);
+
+AuthRouter.get('/auth/facebook',
+  passport.authenticate('facebook'));
+
+AuthRouter.get('/auth/facebook/callback',
+  passport.authenticate('facebook', { failureRedirect: '/api/v1/user/auth/facebook' }),
+  function (req, res) {
+    res.json({ message: "SuccessFully Logged in..", susccess: true })
+
+  });
 AuthRouter.delete('/logout');
 
 module.exports = AuthRouter;

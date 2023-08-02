@@ -32,4 +32,7 @@ AuthRouter.get('/auth/facebook/callback',
   });
 AuthRouter.delete('/logout');
 
+AuthRouter.post("/forgot-password", AuthController.forgotPassword);
+AuthRouter.post("/verify-code", AuthController.verifyCode);
+AuthRouter.post("/reset-password", AuthController.resetPassword);
 module.exports = AuthRouter;

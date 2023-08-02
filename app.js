@@ -17,6 +17,8 @@ const passport = require("./utils/auth");
 const AuthRouter = require('./Router/AuthRouter');
 const PermissionRouter = require("./Router/PermissionRouter");
 const RoleRouter = require("./Router/RoleRouter");
+const MainCategoryRouter = require("./Router/MainCategoryRouter");
+const SubCategoryRouter = require("./Router/SubCategoryRouter")
 
 const url = env.mongoURL;
 const connect = mongoose.connect(url);
@@ -58,6 +60,8 @@ app.use((req, res, next) => {
 app.use("/api/v1/user/", AuthRouter);
 app.use("/api/v1/permission", PermissionRouter)
 app.use("/api/v1/role", RoleRouter)
+app.use("/api/v1/main-category", MainCategoryRouter)
+app.use("/api/v1/sub-category", SubCategoryRouter)
 
 app.use((req, res, next) => {
   const err = new Error();

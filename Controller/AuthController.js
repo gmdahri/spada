@@ -1,6 +1,7 @@
 const AuthSchema = require('../Models/Auth');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 
 const loginUser = async (req, res, next) => {
@@ -98,7 +99,7 @@ async function getAllUsers(req, res, next) {
         model: "Permissions",
       },
     });
-    res.json({success: true, message: "Permission Retrieved", data: users});
+    res.json({ success: true, message: "Permission Retrieved", data: users });
   } catch (error) {
     next(error);
   }
@@ -106,14 +107,14 @@ async function getAllUsers(req, res, next) {
 
 async function createUser(req, res, next) {
   try {
-    const {email, Username} = req.body;
-    const user = await AuthSchema.findOne({email, Username });
-    if(user){
-      return res.status(404).json({data:{}, success: false, message: "User Already Exist" });
+    const { email, Username } = req.body;
+    const user = await AuthSchema.findOne({ email, Username });
+    if (user) {
+      return res.status(404).json({ data: {}, success: false, message: "User Already Exist" });
     }
     const newUser = new AuthSchema({ route, can });
     const saveUser = await newUser.save();
-    res.status(201).json({success: true, message: "User Created", data: saveUser});
+    res.status(201).json({ success: true, message: "User Created", data: saveUser });
   } catch (error) {
     next(error);
   }
@@ -129,9 +130,9 @@ async function getUserById(req, res, next) {
       },
     });
     if (!user) {
-      return res.status(404).json({success: false, data: {}, message: "user not found" });
+      return res.status(404).json({ success: false, data: {}, message: "user not found" });
     }
-    res.json({success: true, message: "user Created", data: user});
+    res.json({ success: true, message: "user Created", data: user });
   } catch (error) {
     next(error);
   }
@@ -143,12 +144,12 @@ async function updateUserById(req, res, next) {
     const updateUser = await AuthSchema.findByIdAndUpdate(
       req.params.id,
       { body },
-      { new: true } 
+      { new: true }
     );
     if (!updateUser) {
-      return res.status(404).json({data:{}, success: false, message: "User not found" });
+      return res.status(404).json({ data: {}, success: false, message: "User not found" });
     }
-    res.json({success: true, message: "Permission Updated", data: updatedPermission});
+    res.json({ success: true, message: "Permission Updated", data: updatedPermission });
   } catch (error) {
     next(error);
   }
@@ -158,11 +159,128 @@ async function deleteUserById(req, res, next) {
   try {
     const deletedUser = await AuthSchema.findByIdAndRemove(req.params.id);
     if (!deletedUser) {
-      return res.status(404).json({ success: true, data: {},message: "User not found" });
+      return res.status(404).json({ success: true, data: {}, message: "User not found" });
     }
-    res.json({success: true, message: "User Deleted", data: {}});
+    res.json({ success: true, message: "User Deleted", data: {} });
   } catch (error) {
     next(error);
+  }
+}
+
+async function sendEmail(email, subject, text) {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      pool: true,
+      auth: {
+        user: "gm.webevis@gmail.com",
+        pass: "zovrfkzboftaoyys",
+      },
+    });
+
+    const mailOptions = {
+      from: "ghulam@starcos.com",
+      to: email,
+      subject,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email: ", error);
+  }
+}
+
+const forgotPassword = async (req, res, next) => {
+  const { username } = req.body;
+  try {
+    if (username !== undefined) {
+
+      const user = await AuthSchema.findOne({ Username: username });
+      if (!user) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Username not found." });
+      }
+
+      const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+      user.verificationCode = verificationCode;
+      await user.save();
+
+      const subject = "Password Reset Verification Code";
+      const text = `Your verification code is: ${verificationCode}`;
+      await sendEmail(user.email, subject, text);
+
+      res.status(200).json({
+        success: true,
+        message: "Verification code sent to your email",
+      });
+
+    }
+    else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username not defined." });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+const verifyCode = async (req, res, next) => {
+  const { username, code } = req.body;
+  try {
+    const user = await AuthSchema.findOne({ Username: username });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username not found." });
+    }
+
+    if (user.verificationCode !== code) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid verification code" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Verification successful",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  const { username, newPassword } = req.body;
+  try {
+    const user = await AuthSchema.findOne({ Username: username });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username not found." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+
+    user.verificationCode = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
+  } catch (err) {
+    next(err);
   }
 }
 
@@ -174,5 +292,8 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUserById,
-  deleteUserById
+  deleteUserById,
+  forgotPassword,
+  verifyCode,
+  resetPassword
 };

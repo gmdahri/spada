@@ -60,7 +60,7 @@ const getTrends = async (req, res, next) => {
 
         // Send the response
         if (newGeoMapData.length > 0) {
-            res.status(200).json({ success: true, data: newGeoMapData });
+            res.status(200).json({ success: true, data: newGeoMapData.flat() });
         }
     } catch (err) {
         next(err);

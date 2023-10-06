@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Roles = require("../Models/Role")
 
 async function getRoleById(req, res, next) {
@@ -31,6 +32,10 @@ async function getRoleById(req, res, next) {
   
   async function deleteRoleById(req, res, next) {
     try {
+      const roleId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(roleId)) {
+      return res.status(400).json({ data: {}, success: false, message: "Invalid Role ID" });
+    }
       const deletedRole = await Roles.findByIdAndRemove(req.params.id);
       if (!deletedRole) {
         return res.status(404).json({data:{}, success: false, message: "Role not found" });

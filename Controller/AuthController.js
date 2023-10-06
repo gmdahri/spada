@@ -3,6 +3,70 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
+/**
+ * @swagger
+ * /user/login:
+ *   post:
+ *     summary: Log in a user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             example:
+ *               username: john@example.com
+ *               password: secret123
+ *     responses:
+ *       200:
+ *         description: Successful login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                   example:
+ *                     success: true
+ *                     message: Login Successfully
+ *                     data:
+ *                       token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                       email: john@example.com
+ *                       name: John Doe
+ *       400:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 success: false
+ *                 message: Invalid credentials for username or password
+ */
 
 const loginUser = async (req, res, next) => {
   console.log('user', req.user)
@@ -98,8 +162,24 @@ async function getAllUsers(req, res, next) {
         path: "Permissions",
         model: "Permissions",
       },
+    }).populate({
+      path: "quizzes",
+      populate: {
+        path: "questionIds",
+        model: "Question",
+        populate: [
+          {
+            path: "mainCategoryId",
+            model: "MainCategory",
+          },
+          {
+            path: "subCategoryId",
+            model: "SubCategory",
+          },
+        ],
+      },
     });
-    res.json({ success: true, message: "Permission Retrieved", data: users });
+    res.json({ success: true, message: "Users Retrieved", data: users });
   } catch (error) {
     next(error);
   }
@@ -112,7 +192,7 @@ async function createUser(req, res, next) {
     if (user) {
       return res.status(404).json({ data: {}, success: false, message: "User Already Exist" });
     }
-    const newUser = new AuthSchema({ route, can });
+    const newUser = new AuthSchema({ email, Username });
     const saveUser = await newUser.save();
     res.status(201).json({ success: true, message: "User Created", data: saveUser });
   } catch (error) {
@@ -128,7 +208,7 @@ async function getUserById(req, res, next) {
         path: "Permissions",
         model: "Permissions",
       },
-    });
+    }).populate("quizzes");
     if (!user) {
       return res.status(404).json({ success: false, data: {}, message: "user not found" });
     }
@@ -143,13 +223,13 @@ async function updateUserById(req, res, next) {
     const body = req.body
     const updateUser = await AuthSchema.findByIdAndUpdate(
       req.params.id,
-      { body },
+      body ,
       { new: true }
     );
     if (!updateUser) {
       return res.status(404).json({ data: {}, success: false, message: "User not found" });
     }
-    res.json({ success: true, message: "Permission Updated", data: updatedPermission });
+    res.json({ success: true, message: "User Updated", data: updateUser });
   } catch (error) {
     next(error);
   }
@@ -194,15 +274,15 @@ async function sendEmail(email, subject, text) {
 }
 
 const forgotPassword = async (req, res, next) => {
-  const { username } = req.body;
+  const { email } = req.body;
   try {
-    if (username !== undefined) {
+    if (email !== undefined) {
 
-      const user = await AuthSchema.findOne({ Username: username });
+      const user = await AuthSchema.findOne({ email: email });
       if (!user) {
         return res
           .status(400)
-          .json({ success: false, message: "Username not found." });
+          .json({ success: false, message: "email not found." });
       }
 
       const verificationCode = Math.floor(100000 + Math.random() * 900000);
@@ -223,7 +303,7 @@ const forgotPassword = async (req, res, next) => {
     else {
       return res
         .status(400)
-        .json({ success: false, message: "Username not defined." });
+        .json({ success: false, message: "email is not defined." });
     }
   } catch (err) {
     next(err);
@@ -231,9 +311,9 @@ const forgotPassword = async (req, res, next) => {
 };
 
 const verifyCode = async (req, res, next) => {
-  const { username, code } = req.body;
+  const { email, code } = req.body;
   try {
-    const user = await AuthSchema.findOne({ Username: username });
+    const user = await AuthSchema.findOne({ email: email });
 
     if (!user) {
       return res
@@ -257,14 +337,14 @@ const verifyCode = async (req, res, next) => {
 };
 
 const resetPassword = async (req, res, next) => {
-  const { username, newPassword } = req.body;
+  const { email, newPassword } = req.body;
   try {
-    const user = await AuthSchema.findOne({ Username: username });
+    const user = await AuthSchema.findOne({ email: email });
 
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: "Username not found." });
+        .json({ success: false, message: "email not found." });
     }
 
     const salt = await bcrypt.genSalt(10);

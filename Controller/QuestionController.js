@@ -15,8 +15,14 @@ const createQuestion = async (req, res, next) => {
       optionC,
       optionD,
       questionType,
+      mainCategoryId,
+      subCategoryId
     } = req.body;
-
+    const questionAlreadyExist = await Question.find({title});
+    console.log("ques", questionAlreadyExist)
+    if(questionAlreadyExist && questionAlreadyExist.length>0){
+      return res.status(200).json({data:{}, message:"question title already exist", success: false})
+    }
     const question = await Question.create({
       title,
       description,
@@ -26,6 +32,8 @@ const createQuestion = async (req, res, next) => {
       optionC,
       optionD,
       questionType,
+      mainCategoryId,
+      subCategoryId
     });
 
     res.status(201).json({ success: true, data: question });
@@ -36,7 +44,7 @@ const createQuestion = async (req, res, next) => {
 
 const getAllQuestions = async (req, res, next) => {
   try {
-    const questions = await Question.find();
+    const questions = await Question.find().populate("subCategoryId").populate("mainCategoryId");
     res.status(200).json({ success: true, data: questions });
   } catch (err) {
     next(err);
@@ -46,7 +54,7 @@ const getAllQuestions = async (req, res, next) => {
 const getQuestionById = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const question = await Question.findById(id);
+    const question = await Question.findById(id).populate("subCategoryId").populate("mainCategoryId");
     if (!question) {
       return res.status(404).json({ success: false, message: "Question not found" });
     }
@@ -76,7 +84,7 @@ const deleteQuestion = async (req, res, next) => {
     if (!question) {
       return res.status(404).json({ success: false, message: "Question not found" });
     }
-    res.status(200).json({ success: true, data: question });
+    res.status(200).json({ success: true, data: {}, message:"Successfully deleted." });
   } catch (err) {
     next(err);
   }
@@ -85,7 +93,7 @@ const deleteQuestion = async (req, res, next) => {
 const findBySubCategory = async (req, res, next) => {
   const { subCategoryId } = req.params;
   try {
-    const questions = await Question.find({ subCategory: subCategoryId });
+    const questions = await Question.find({ subCategoryId: subCategoryId });
     res.status(200).json({ success: true, data: questions });
   } catch (err) {
     next(err);
@@ -95,7 +103,7 @@ const findBySubCategory = async (req, res, next) => {
 const findByMainCategory = async (req, res, next) => {
   const { mainCategoryId } = req.params;
   try {
-    const questions = await Question.find({ mainCategory: mainCategoryId });
+    const questions = await Question.find({ mainCategoryId: mainCategoryId });
     res.status(200).json({ success: true, data: questions });
   } catch (err) {
     next(err);

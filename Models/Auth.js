@@ -25,7 +25,10 @@ const AuthSchema = new Schema({
     },
     facebookId:{
         type: String,
-    }
+    },
+    quizzes:[
+        {type: mongoose.Types.ObjectId, ref: "Quiz"}
+    ]
 })
 const AuthSchemas = mongoose.model("AuthSchemas", AuthSchema);
 module.exports = AuthSchemas;

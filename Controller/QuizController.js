@@ -1,6 +1,7 @@
 
 const Quiz = require("../Models/Quiz");
-const User = require("../Models/Auth")
+const User = require("../Models/Auth");
+const Question = require("../Models/Question");
 
 const createQuiz = async (req, res, next) => {
   try {
@@ -16,7 +17,7 @@ const createQuiz = async (req, res, next) => {
 
 const getAllQuizzes = async (req, res, next) => {
   try {
-    const quizzes = await Quiz.find();
+    const quizzes = await Quiz.find().populate("questionIds");
     res.status(200).json({ success: true, data: quizzes });
   } catch (err) {
     next(err);
@@ -67,8 +68,8 @@ const createAQuizByUser = async (req, res, next) => {
     const { subCategoryId, mainCategoryId } = req.body;
     try {
       const questions = await Question.find({
-        subCategory: subCategoryId,
-        mainCategory: mainCategoryId,
+        subCategoryId,
+         mainCategoryId,
       }).select("_id");
   
       const questionIds = questions.map((question) => question._id);

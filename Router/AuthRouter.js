@@ -5,8 +5,8 @@ const passport = require("../utils/auth")
 const AuthController = require('../Controller/AuthController');
 const { info } = require("winston");
 
-AuthRouter.get('/', AuthController.getAllUsers);
 AuthRouter.post('/', AuthController.createUser);
+AuthRouter.get('/', AuthController.getAllUsers);
 AuthRouter.get('/:id', AuthController.getAllUsers);
 AuthRouter.put('/:id', AuthController.updateUserById);
 AuthRouter.put('/assignrole/:id', AuthController.AssignRole);

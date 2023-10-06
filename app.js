@@ -22,6 +22,8 @@ const MainCategoryRouter = require("./Router/MainCategoryRouter");
 const SubCategoryRouter = require("./Router/SubCategoryRouter")
 const questionRouter = require("./Router/QuestionRouter")
 const quizRouter = require("./Router/QuizRouter")
+const spadaRouter = require("./Router/SpadaRouter")
+const swagger = require('./utils/swagger');
 
 const url = env.mongoURL;
 const connect = mongoose.connect(url);
@@ -60,6 +62,8 @@ app.use((req, res, next) => {
   logger.info(`[${req.method}] ${req.originalUrl}`);
   next();
 });
+app.use('/api-docs', swagger.serveSwagger, swagger.setupSwagger);
+
 app.use("/api/v1/user/", AuthRouter);
 app.use("/api/v1/permission", PermissionRouter)
 app.use("/api/v1/role", RoleRouter)
@@ -67,6 +71,7 @@ app.use("/api/v1/main-category", MainCategoryRouter)
 app.use("/api/v1/sub-category", SubCategoryRouter)
 app.use("/api/v1/question", questionRouter)
 app.use("/api/v1/quiz", quizRouter)
+app.use("/api/v1/spada",spadaRouter)
 
 app.use((req, res, next) => {
   const err = new Error();

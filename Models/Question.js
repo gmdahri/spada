@@ -4,6 +4,7 @@ const QuestionSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
+    unique: true
   },
   description: {
     type: String,
@@ -29,6 +30,14 @@ const QuestionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  mainCategoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "MainCategory"
+  },
+  subCategoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubCategory"
+  }
 });
 
 const Question = mongoose.model("Question", QuestionSchema);

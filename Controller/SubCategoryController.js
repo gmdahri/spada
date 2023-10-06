@@ -1,4 +1,5 @@
 
+const { default: mongoose } = require("mongoose");
 const SubCategory = require("../Models/SubCategory");
 
 const createSubCategory = async (req, res, next) => {
@@ -53,11 +54,14 @@ const updateSubCategory = async (req, res, next) => {
 const deleteSubCategory = async (req, res, next) => {
   const { id } = req.params;
   try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ data: {}, success: false, message: "Invalid Role ID" });
+    }
     const subCategory = await SubCategory.findByIdAndRemove(id);
     if (!subCategory) {
       return res.status(404).json({ success: false, message: "SubCategory not found" });
     }
-    res.status(200).json({ success: true, data: subCategory });
+    res.status(200).json({ success: true, data: {}, message:"Deleted." });
   } catch (err) {
     next(err);
   }
